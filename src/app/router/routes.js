@@ -11,24 +11,52 @@ export const routes = [
     component: () => import('@/pages/auth/RegisterPage.vue'),
     meta: { layout: 'blank', guestOnly: true },
   },
+
+  // User
   {
-    path: '/join-list',
-    name: 'join-list',
+    path: '/index',
+    name: 'index-home',
     component: () => import('@/pages/user/EventsPage.vue'),
     meta: { layout: 'user', requiresAuth: true, role: 'USER' },
   },
   {
-    path: '/apply',
+    path: '/index/event/:eventId',
+    name: 'event-detail',
+    component: () => import('@/pages/user/EventDetailPage.vue'),
+    meta: { layout: 'user', requiresAuth: true, role: 'USER' },
+  },
+  {
+    path: '/index/apply',
     name: 'apply',
     component: () => import('@/pages/user/ApplyPage.vue'),
     meta: { layout: 'user', requiresAuth: true, role: 'USER' },
   },
   {
-    path: '/mypage',
+    path: '/index/mypage',
     name: 'mypage',
     component: () => import('@/pages/user/MyPage.vue'),
     meta: { layout: 'user', requiresAuth: true, role: 'USER' },
   },
+
+  // Legacy redirects
+  {
+    path: '/join-list',
+    redirect: '/index',
+  },
+  {
+    path: '/join-list/:eventId',
+    redirect: (to) => `/index/event/${to.params.eventId}`,
+  },
+  {
+    path: '/apply',
+    redirect: '/index/apply',
+  },
+  {
+    path: '/mypage',
+    redirect: '/index/mypage',
+  },
+
+  // Admin
   {
     path: '/index/admin',
     redirect: '/index/admin/event-list',

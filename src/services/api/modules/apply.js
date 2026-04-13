@@ -1,4 +1,4 @@
-import { getLayoutByCode } from '../mock-db'
+import { getLayoutByCode, reserveCounselingSlot } from '../mock-db'
 import { mockError, mockResponse } from '../mock'
 
 export function fetchApplyLayoutByCode(layoutCode) {
@@ -17,6 +17,22 @@ export function fetchApplyLayoutByCode(layoutCode) {
       layoutCode: event.layoutCode,
       ...event.layout,
     },
+  })
+}
+
+export function submitCounselingReservation(payload) {
+  const result = reserveCounselingSlot(payload)
+
+  if (!result.ok) {
+    return mockResponse({
+      success: false,
+      reason: result.reason,
+    })
+  }
+
+  return mockResponse({
+    success: true,
+    data: result.reservation,
   })
 }
 

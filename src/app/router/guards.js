@@ -6,7 +6,7 @@ export function authGuard(to) {
   const requiredRole = to.meta.role
 
   if (to.meta.guestOnly && isLoggedIn) {
-    return authStore.isAdmin ? '/index/admin/event-list' : '/join-list'
+    return authStore.isAdmin ? '/index/admin/event-list' : '/index'
   }
 
   if (to.meta.requiresAuth && !isLoggedIn) {
@@ -14,7 +14,7 @@ export function authGuard(to) {
   }
 
   if (requiredRole === 'ADMIN' && !authStore.isAdmin) {
-    return '/join-list'
+    return '/index'
   }
 
   return true

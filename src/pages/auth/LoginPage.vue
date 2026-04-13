@@ -25,7 +25,7 @@ async function submit() {
     authStore.setSession({ token, userRole: role })
     pushToast('로그인되었습니다.')
 
-    router.push(role === 'ADMIN' ? '/index/admin/event-list' : '/join-list')
+    router.push(role === 'ADMIN' ? '/index/admin/event-list' : '/index')
   } catch (error) {
     const message = error?.response?.data?.message || '로그인에 실패했습니다.'
     pushToast(message, 'error')

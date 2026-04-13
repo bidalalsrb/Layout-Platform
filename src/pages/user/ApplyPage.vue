@@ -3,10 +3,12 @@ import { reactive, ref } from 'vue'
 import UiCard from '@/components/ui/UiCard.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import AppModal from '@/components/common/AppModal.vue'
-import { fetchApplyLayoutByCode } from '@/services/api/modules/apply'
+import { fetchApplyLayoutByCode, submitCounselingReservation } from '@/services/api/modules/apply'
 import { useToast } from '@/composables/useToast'
+import { useUserProfileStore } from '@/app/store/userProfile'
 
 const { pushToast } = useToast()
+const profileStore = useUserProfileStore()
 
 const form = reactive({
   layoutCode: '',
@@ -17,6 +19,12 @@ const codeModalOpen = ref(true)
 const detailModalOpen = ref(false)
 const selectedCell = ref(null)
 
+async function loadLayoutByCode(code, silent = false) {
+  const { data } = await fetchApplyLayoutByCode(code)
+  layout.value = data.data
+  if (!silent) pushToast('배치도를 불러왔습니다.')
+}
+
 async function searchLayout() {
   const code = form.layoutCode.trim()
 
@@ -26,10 +34,8 @@ async function searchLayout() {
   }
 
   try {
-    const { data } = await fetchApplyLayoutByCode(code)
-    layout.value = data.data
+    await loadLayoutByCode(code)
     codeModalOpen.value = false
-    pushToast('배치도를 불러왔습니다.')
   } catch (error) {
     layout.value = null
     const message = error?.response?.data?.message || '배치 정보를 찾지 못했습니다.'
@@ -44,6 +50,32 @@ function openCodeModal() {
 function openCellDetail(cell) {
   selectedCell.value = cell
   detailModalOpen.value = true
+}
+
+function getSlotStatus(slot) {
+  const reserved = slot?.reservations?.length || 0
+  const capacity = slot?.capacity || 0
+  return `${reserved}/${capacity}`
+}
+
+async function applySlot(slot) {
+  if (!layout.value || !selectedCell.value) return
+
+  const { data } = await submitCounselingReservation({
+    layoutCode: layout.value.layoutCode,
+    cellId: selectedCell.value.id,
+    slotId: slot.id,
+    userProfile: profileStore.profile,
+  })
+
+  if (!data.success) {
+    pushToast(data.reason || '신청할 수 없습니다.', 'error')
+    return
+  }
+
+  pushToast('상담 신청이 완료되었습니다.')
+  await loadLayoutByCode(layout.value.layoutCode, true)
+  selectedCell.value = layout.value.cells.find((cell) => cell.id === selectedCell.value.id) || null
 }
 </script>
 
@@ -91,11 +123,30 @@ function openCellDetail(cell) {
       </div>
     </AppModal>
 
-    <AppModal :open="detailModalOpen" title="셀 정보" @close="detailModalOpen = false">
-      <div v-if="selectedCell" class="space-y-2 text-sm">
+    <AppModal :open="detailModalOpen" title="셀 정보 / 상담 신청" @close="detailModalOpen = false">
+      <div v-if="selectedCell" class="space-y-3 text-sm">
         <p><span class="font-semibold">셀:</span> {{ selectedCell.label }}</p>
         <p><span class="font-semibold">이름:</span> {{ selectedCell.name || '미입력' }}</p>
         <p><span class="font-semibold">내용:</span> {{ selectedCell.content || '미입력' }}</p>
+        <p><span class="font-semibold">상담자:</span> {{ selectedCell.counselor?.name || '미지정' }}</p>
+
+        <div class="rounded-xl border border-slate-200 p-3">
+          <p class="mb-2 font-semibold">상담 시간</p>
+
+          <div v-if="!selectedCell.counselor?.slots?.length" class="text-slate-500">신청 가능한 상담 시간이 없습니다.</div>
+
+          <div v-for="slot in selectedCell.counselor?.slots || []" :key="slot.id" class="mb-2 rounded-lg border p-2">
+            <div class="flex items-center justify-between">
+              <p class="font-medium">{{ slot.time || '시간 미지정' }}</p>
+              <p class="text-xs text-slate-500">{{ getSlotStatus(slot) }}</p>
+            </div>
+            <div class="mt-2 flex justify-end">
+              <UiButton @click="applySlot(slot)">신청하기</UiButton>
+            </div>
+          </div>
+
+          <p v-if="profileStore.isBrowseOnly" class="mt-2 text-xs text-amber-600">둘러보기 모드에서는 신청이 제한됩니다. 상단 회원가입 버튼으로 등록 후 이용해 주세요.</p>
+        </div>
       </div>
     </AppModal>
   </UiCard>

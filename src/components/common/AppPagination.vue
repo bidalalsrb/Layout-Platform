@@ -20,7 +20,7 @@ function moveTo(page) {
 </script>
 
 <template>
-  <div class="mt-4 flex items-center gap-1.5">
+  <div class="mt-4 flex w-full items-center justify-center gap-1.5">
     <button class="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-700 transition hover:border-slate-300" @click="moveTo(page - 1)">이전</button>
     <button
       v-for="num in pageNumbers"

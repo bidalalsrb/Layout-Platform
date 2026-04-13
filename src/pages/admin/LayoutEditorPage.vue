@@ -21,7 +21,18 @@ const selectedCellId = ref(null)
 const editor = reactive({
   name: '',
   content: '',
+  counselorName: '',
+  slots: [],
 })
+
+function createSlot(time = '', capacity = 1) {
+  return {
+    id: `${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+    time,
+    capacity: Number(capacity) || 1,
+    reservations: [],
+  }
+}
 
 function defaultCells() {
   return Array.from({ length: 30 }, (_, i) => ({
@@ -29,8 +40,16 @@ function defaultCells() {
     label: `S-${String(i + 1).padStart(2, '0')}`,
     name: '',
     content: '',
+    counselor: {
+      name: '',
+      slots: [],
+    },
   }))
 }
+
+const selectedCell = computed(() =>
+  cells.value.find((cell) => cell.id === selectedCellId.value) || null,
+)
 
 async function loadLayout() {
   if (!eventId.value) {
@@ -53,7 +72,22 @@ function openEditor(cell) {
   selectedCellId.value = cell.id
   editor.name = cell.name || ''
   editor.content = cell.content || ''
+  editor.counselorName = cell.counselor?.name || ''
+  editor.slots = (cell.counselor?.slots || []).map((slot) => ({
+    id: slot.id,
+    time: slot.time,
+    capacity: slot.capacity,
+    reservations: slot.reservations || [],
+  }))
   open.value = true
+}
+
+function addSlot() {
+  editor.slots.push(createSlot())
+}
+
+function removeSlot(slotId) {
+  editor.slots = editor.slots.filter((slot) => slot.id !== slotId)
 }
 
 function saveCell() {
@@ -61,7 +95,20 @@ function saveCell() {
 
   cells.value = cells.value.map((cell) =>
     cell.id === selectedCellId.value
-      ? { ...cell, name: editor.name.trim(), content: editor.content.trim() }
+      ? {
+          ...cell,
+          name: editor.name.trim(),
+          content: editor.content.trim(),
+          counselor: {
+            name: editor.counselorName.trim(),
+            slots: editor.slots.map((slot) => ({
+              id: slot.id,
+              time: slot.time,
+              capacity: Number(slot.capacity) || 1,
+              reservations: slot.reservations || [],
+            })),
+          },
+        }
       : cell,
   )
 
@@ -72,7 +119,14 @@ function resetCell() {
   if (!selectedCellId.value) return
 
   cells.value = cells.value.map((cell) =>
-    cell.id === selectedCellId.value ? { ...cell, name: '', content: '' } : cell,
+    cell.id === selectedCellId.value
+      ? {
+          ...cell,
+          name: '',
+          content: '',
+          counselor: { name: '', slots: [] },
+        }
+      : cell,
   )
 
   open.value = false
@@ -125,19 +179,57 @@ loadLayout()
       <button
         v-for="cell in cells"
         :key="cell.id"
-        class="aspect-square rounded border text-[11px] transition"
+        class="aspect-square rounded border p-1 text-[11px] transition"
         :class="cell.name ? 'border-sky-700 bg-sky-50 text-sky-900' : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'"
         @click="openEditor(cell)"
       >
-        <span class="line-clamp-2 block px-1 font-medium">{{ cell.name || cell.label }}</span>
+        <span class="line-clamp-1 block font-medium">{{ cell.name || cell.label }}</span>
+        <span class="line-clamp-1 block text-[10px] text-slate-500">{{ cell.counselor?.name || '상담자 미지정' }}</span>
       </button>
     </VueDraggable>
 
-    <AppModal :open="open" title="셀 정보 작성/수정" @close="closeEditor">
+    <AppModal :open="open" title="셀 정보 / 상담 예약 설정" @close="closeEditor">
       <div class="space-y-3">
-        <input v-model="editor.name" class="toss-input w-full" type="text" placeholder="이름" />
-        <textarea v-model="editor.content" class="toss-input min-h-24 w-full" placeholder="내용" />
+        <input v-model="editor.name" class="toss-input w-full" type="text" placeholder="셀 이름" />
+        <textarea v-model="editor.content" class="toss-input min-h-20 w-full" placeholder="셀 내용" />
+
+        <div class="rounded-xl border border-slate-200 p-3">
+          <p class="mb-2 text-sm font-semibold">상담자 설정</p>
+          <input v-model="editor.counselorName" class="toss-input w-full" type="text" placeholder="상담자 이름" />
+        </div>
+
+        <div class="rounded-xl border border-slate-200 p-3">
+          <div class="mb-2 flex items-center justify-between">
+            <p class="text-sm font-semibold">상담 시간별 정원</p>
+            <UiButton variant="secondary" @click="addSlot">시간 추가</UiButton>
+          </div>
+
+          <div v-if="editor.slots.length === 0" class="text-xs text-slate-500">등록된 상담 시간이 없습니다.</div>
+
+          <div v-for="slot in editor.slots" :key="slot.id" class="mb-2 rounded-lg border p-2">
+            <div class="grid grid-cols-[1fr_1fr_auto] gap-2">
+              <input v-model="slot.time" class="toss-input" type="time" />
+              <input v-model.number="slot.capacity" class="toss-input" type="number" min="1" placeholder="정원" />
+              <UiButton variant="secondary" @click="removeSlot(slot.id)">삭제</UiButton>
+            </div>
+            <p class="mt-1 text-xs text-slate-500">신청 {{ slot.reservations?.length || 0 }} / 정원 {{ slot.capacity }}</p>
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-slate-200 p-3">
+          <p class="mb-2 text-sm font-semibold">상담 신청 리스트</p>
+          <div v-if="!selectedCell?.counselor?.slots?.length" class="text-xs text-slate-500">상담 시간이 없어 신청 내역이 없습니다.</div>
+
+          <div v-for="slot in selectedCell?.counselor?.slots || []" :key="slot.id" class="mb-2 rounded-lg border p-2 text-xs">
+            <p class="font-semibold">{{ slot.time || '시간 미지정' }} ({{ slot.reservations?.length || 0 }}/{{ slot.capacity }})</p>
+            <ul v-if="slot.reservations?.length" class="mt-1 list-disc pl-4">
+              <li v-for="item in slot.reservations" :key="item.id">{{ item.name }} / {{ item.phone }}</li>
+            </ul>
+            <p v-else class="mt-1 text-slate-500">신청자 없음</p>
+          </div>
+        </div>
       </div>
+
       <div class="mt-3 flex justify-between">
         <UiButton variant="secondary" @click="resetCell">초기화</UiButton>
         <UiButton @click="saveCell">저장</UiButton>
