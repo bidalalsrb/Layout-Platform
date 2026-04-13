@@ -17,9 +17,5 @@ export function authGuard(to) {
     return '/join-list'
   }
 
-  if (requiredRole === 'USER' && authStore.isAdmin) {
-    return '/index/admin/event-list'
-  }
-
   return true
 }

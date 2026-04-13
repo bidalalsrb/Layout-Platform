@@ -1,19 +1,10 @@
-import { mockResponse } from '../mock'
+import { getEventById, saveEventLayout } from '../mock-db'
+import { mockError, mockResponse } from '../mock'
 
 const MOCK_PARTICIPANTS = [
   { id: 1, name: '김학생', major: '컴퓨터공학과', booth: 'A-01' },
   { id: 2, name: '이학생', major: '경영학과', booth: 'A-02' },
 ]
-
-const MOCK_LAYOUT = {
-  eventId: 1001,
-  rows: 5,
-  cols: 6,
-  cells: Array.from({ length: 30 }, (_, idx) => ({
-    id: idx + 1,
-    type: 'EMPTY',
-  })),
-}
 
 export function fetchParticipants() {
   return mockResponse({
@@ -23,20 +14,36 @@ export function fetchParticipants() {
 }
 
 export function fetchLayout(eventId) {
+  const event = getEventById(eventId)
+
+  if (!event) {
+    return mockError('행사를 찾을 수 없습니다.', 404)
+  }
+
   return mockResponse({
     data: {
-      ...MOCK_LAYOUT,
-      eventId: Number(eventId) || MOCK_LAYOUT.eventId,
+      eventId: event.id,
+      title: event.title,
+      layoutCode: event.layoutCode,
+      ...event.layout,
     },
   })
 }
 
 export function saveLayout(eventId, payload) {
+  const updated = saveEventLayout(eventId, payload)
+
+  if (!updated) {
+    return mockError('행사를 찾을 수 없습니다.', 404)
+  }
+
   return mockResponse({
     success: true,
     data: {
-      eventId: Number(eventId),
-      ...payload,
+      eventId: updated.id,
+      title: updated.title,
+      layoutCode: updated.layoutCode,
+      ...updated.layout,
     },
   })
 }

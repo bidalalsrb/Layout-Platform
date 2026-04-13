@@ -15,8 +15,10 @@ defineProps({
   <button
     :type="type"
     :class="[
-      'rounded px-3 py-2 text-sm font-medium transition',
-      variant === 'primary' ? 'bg-slate-900 text-white hover:bg-slate-800' : 'border bg-white text-slate-900 hover:bg-slate-50',
+      'ui-button rounded-xl px-3.5 py-2.5 text-sm font-semibold transition duration-200 active:translate-y-px',
+      variant === 'primary'
+        ? 'bg-gradient-to-b from-[#4d98ff] to-[#2d7ef7] text-white shadow-[0_8px_18px_rgba(49,130,246,0.38)] hover:brightness-105'
+        : 'border border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50',
     ]"
   >
     <slot />

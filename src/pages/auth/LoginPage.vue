@@ -34,13 +34,13 @@ async function submit() {
 </script>
 
 <template>
-  <div class="flex min-h-screen items-center justify-center px-4">
+  <div class="page-enter flex min-h-screen items-center justify-center px-4">
     <UiCard class="w-full max-w-md space-y-4">
-      <h1 class="text-2xl font-bold text-slate-900">로그인</h1>
+      <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">로그인</h1>
       <p class="text-sm text-slate-500">테스트 계정: admin / 1234</p>
       <div class="space-y-3">
-        <input v-model="form.userId" class="w-full rounded border px-3 py-2" type="text" placeholder="아이디" />
-        <input v-model="form.password" class="w-full rounded border px-3 py-2" type="password" placeholder="비밀번호" />
+        <input v-model="form.userId" class="toss-input w-full" type="text" placeholder="아이디" />
+        <input v-model="form.password" class="toss-input w-full" type="password" placeholder="비밀번호" />
         <UiButton class="w-full" @click="submit">로그인</UiButton>
         <UiButton class="w-full" variant="secondary" @click="router.push('/register')">회원가입</UiButton>
       </div>

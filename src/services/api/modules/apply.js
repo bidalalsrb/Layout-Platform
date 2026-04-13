@@ -1,21 +1,27 @@
-import { mockResponse } from '../mock'
+import { getLayoutByCode } from '../mock-db'
+import { mockError, mockResponse } from '../mock'
 
-const MOCK_LAYOUT = {
-  rows: 3,
-  cols: 6,
-  seats: Array.from({ length: 18 }, (_, idx) => ({
-    id: idx + 1,
-    status: idx % 4 === 0 ? 'SELECTED' : 'AVAILABLE',
-  })),
+export function fetchApplyLayoutByCode(layoutCode) {
+  const event = getLayoutByCode(layoutCode)
+
+  if (!event) {
+    return mockError('일치하는 배치 코드가 없습니다.', 404)
+  }
+
+  return mockResponse({
+    data: {
+      eventId: event.id,
+      title: event.title,
+      description: event.content || event.description,
+      period: event.period,
+      layoutCode: event.layoutCode,
+      ...event.layout,
+    },
+  })
 }
 
 export function fetchApplyLayout(eventId) {
-  return mockResponse({
-    data: {
-      eventId: Number(eventId),
-      ...MOCK_LAYOUT,
-    },
-  })
+  return mockError(`eventId(${eventId}) 조회는 현재 비활성화입니다. 배치코드 조회를 사용해 주세요.`, 400)
 }
 
 export function submitApply(eventId, payload) {

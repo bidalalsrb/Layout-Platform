@@ -2,10 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Pretendard';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Thin.woff2') format('woff2');
+  font-weight: 100;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pretendard';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-ExtraLight.woff2') format('woff2');
+  font-weight: 200;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pretendard';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pretendard';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pretendard';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pretendard';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pretendard';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pretendard';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-ExtraBold.woff2') format('woff2');
+  font-weight: 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pretendard';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Black.woff2') format('woff2');
+  font-weight: 900;
+  font-display: swap;
+}
+
 :root {
-  color: #0f172a;
-  background: #f8fafc;
+  color: #191f28;
+  background: #f2f6ff;
   font-family: 'Pretendard', 'Noto Sans KR', system-ui, sans-serif;
+  --toss-blue: #3182f6;
+  --toss-blue-soft: #eaf2ff;
 }
 
 * {
@@ -15,8 +80,57 @@
 body {
   margin: 0;
   min-width: 320px;
+  background:
+    radial-gradient(circle at 12% 4%, #dbeafe 0%, transparent 34%),
+    radial-gradient(circle at 90% 0%, #e7f0ff 0%, transparent 30%),
+    #f4f8ff;
 }
 
 #app {
   min-height: 100vh;
+}
+
+.page-enter {
+  animation: page-enter 0.42s ease-out both;
+}
+
+.float-soft {
+  animation: float-soft 4s ease-in-out infinite;
+}
+
+.toss-input {
+  border-radius: 14px;
+  border: 1px solid #dbe4f0;
+  background: #ffffff;
+  padding: 11px 14px;
+  font-size: 14px;
+  color: #191f28;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.toss-input:focus {
+  outline: none;
+  border-color: #6ea9ff;
+  box-shadow: 0 0 0 4px rgba(49, 130, 246, 0.14);
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
 }

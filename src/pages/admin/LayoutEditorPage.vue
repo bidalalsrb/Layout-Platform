@@ -1,25 +1,53 @@
 <script setup>
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { VueDraggable } from 'vue-draggable-plus'
 import UiCard from '@/components/ui/UiCard.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import AppModal from '@/components/common/AppModal.vue'
+import { useToast } from '@/composables/useToast'
+import { fetchLayout, saveLayout } from '@/services/api/modules/admin'
 
+const route = useRoute()
+const { pushToast } = useToast()
+
+const eventId = computed(() => Number(route.query.eventId || 0))
+const eventTitle = ref('')
+const layoutCode = ref('')
 const open = ref(false)
-const cells = ref(
-  Array.from({ length: 30 }, (_, i) => ({
-    id: i + 1,
-    label: `S-${String(i + 1).padStart(2, '0')}`,
-    name: '',
-    content: '',
-  })),
-)
+const cells = ref([])
 
 const selectedCellId = ref(null)
 const editor = reactive({
   name: '',
   content: '',
 })
+
+function defaultCells() {
+  return Array.from({ length: 30 }, (_, i) => ({
+    id: i + 1,
+    label: `S-${String(i + 1).padStart(2, '0')}`,
+    name: '',
+    content: '',
+  }))
+}
+
+async function loadLayout() {
+  if (!eventId.value) {
+    cells.value = defaultCells()
+    return
+  }
+
+  try {
+    const { data } = await fetchLayout(eventId.value)
+    eventTitle.value = data.data.title
+    layoutCode.value = data.data.layoutCode || ''
+    cells.value = data.data.cells?.length ? data.data.cells : defaultCells()
+  } catch {
+    cells.value = defaultCells()
+    pushToast('행사를 찾을 수 없습니다.', 'error')
+  }
+}
 
 function openEditor(cell) {
   selectedCellId.value = cell.id
@@ -30,45 +58,60 @@ function openEditor(cell) {
 
 function saveCell() {
   if (!selectedCellId.value) return
+
   cells.value = cells.value.map((cell) =>
     cell.id === selectedCellId.value
-      ? {
-          ...cell,
-          name: editor.name.trim(),
-          content: editor.content.trim(),
-        }
+      ? { ...cell, name: editor.name.trim(), content: editor.content.trim() }
       : cell,
   )
+
   open.value = false
 }
 
 function resetCell() {
   if (!selectedCellId.value) return
+
   cells.value = cells.value.map((cell) =>
-    cell.id === selectedCellId.value
-      ? {
-          ...cell,
-          name: '',
-          content: '',
-        }
-      : cell,
+    cell.id === selectedCellId.value ? { ...cell, name: '', content: '' } : cell,
   )
+
   open.value = false
+}
+
+async function submitLayout() {
+  if (!eventId.value) {
+    pushToast('먼저 행사에서 배치도 편집으로 진입해 주세요.', 'error')
+    return
+  }
+
+  const { data } = await saveLayout(eventId.value, {
+    rows: 3,
+    cols: 10,
+    cells: cells.value,
+  })
+
+  layoutCode.value = data.data.layoutCode
+  pushToast(`배치 저장 완료 · 코드 ${layoutCode.value}`)
 }
 
 function closeEditor() {
   open.value = false
 }
+
+loadLayout()
 </script>
 
 <template>
   <UiCard>
     <div class="mb-4 flex items-center justify-between">
-      <h2 class="text-xl font-semibold text-slate-900">배치도 생성/편집</h2>
-      <div class="flex gap-2">
-        <UiButton variant="secondary" @click="open = true">행/열 조정</UiButton>
-        <UiButton>배치 저장</UiButton>
+      <div>
+        <h2 class="text-xl font-semibold">배치도 생성/편집</h2>
+        <p class="mt-1 text-sm text-slate-500">
+          행사: {{ eventTitle || '선택되지 않음' }}
+          <span class="ml-2 inline-flex rounded bg-slate-100 px-2 py-0.5 font-semibold">코드: {{ layoutCode || '미발급' }}</span>
+        </p>
       </div>
+      <UiButton @click="submitLayout">배치 저장</UiButton>
     </div>
 
     <VueDraggable
@@ -86,25 +129,14 @@ function closeEditor() {
         :class="cell.name ? 'border-sky-700 bg-sky-50 text-sky-900' : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'"
         @click="openEditor(cell)"
       >
-        <span class="line-clamp-2 block px-1 font-medium">
-          {{ cell.name || cell.label }}
-        </span>
+        <span class="line-clamp-2 block px-1 font-medium">{{ cell.name || cell.label }}</span>
       </button>
     </VueDraggable>
 
     <AppModal :open="open" title="셀 정보 작성/수정" @close="closeEditor">
       <div class="space-y-3">
-        <input
-          v-model="editor.name"
-          class="w-full rounded border px-3 py-2"
-          type="text"
-          placeholder="이름"
-        />
-        <textarea
-          v-model="editor.content"
-          class="min-h-24 w-full rounded border px-3 py-2"
-          placeholder="내용"
-        />
+        <input v-model="editor.name" class="toss-input w-full" type="text" placeholder="이름" />
+        <textarea v-model="editor.content" class="toss-input min-h-24 w-full" placeholder="내용" />
       </div>
       <div class="mt-3 flex justify-between">
         <UiButton variant="secondary" @click="resetCell">초기화</UiButton>

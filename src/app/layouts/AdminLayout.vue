@@ -21,27 +21,27 @@ function logout() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-slate-100">
+  <div class="admin-shell min-h-screen">
     <div class="grid min-h-screen grid-cols-1 md:grid-cols-[240px_1fr]">
-      <aside class="border-r bg-slate-900 text-slate-100">
-        <div class="border-b border-slate-700 px-4 py-4 text-lg font-semibold">Admin</div>
+      <aside class="border-r border-black bg-black text-white">
+        <div class="border-b border-[#1f1f1f] px-4 py-4 text-lg font-semibold tracking-tight">Admin</div>
         <nav class="space-y-1 p-3">
           <RouterLink
             v-for="item in menu"
             :key="item.to"
             :to="item.to"
-            class="block rounded px-3 py-2 text-sm hover:bg-slate-800"
-            active-class="bg-slate-700"
+            class="block rounded-xl px-3 py-2 text-sm text-slate-300"
+            active-class="bg-[#232323] text-white"
           >
             {{ item.label }}
           </RouterLink>
         </nav>
       </aside>
 
-      <div class="flex min-w-0 flex-col">
-        <header class="flex h-14 items-center justify-between border-b bg-white px-4">
-          <p class="text-sm font-medium text-slate-800">관리자 콘솔</p>
-          <button class="rounded bg-slate-900 px-3 py-1.5 text-sm text-white" @click="logout">로그아웃</button>
+      <div class="flex min-w-0 flex-col bg-white">
+        <header class="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4">
+          <p class="text-sm font-semibold tracking-tight text-slate-900">관리자 콘솔</p>
+          <button class="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900" @click="logout">로그아웃</button>
         </header>
         <main class="flex-1 px-4 py-6">
           <slot />
@@ -52,3 +52,17 @@ function logout() {
     <AppToast />
   </div>
 </template>
+
+<style scoped>
+.admin-shell :deep(*) {
+  animation: none !important;
+}
+
+.admin-shell :deep(.ui-card:hover) {
+  transform: none;
+}
+
+.admin-shell :deep(.ui-button) {
+  transition: none;
+}
+</style>
